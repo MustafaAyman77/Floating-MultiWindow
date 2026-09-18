@@ -1,0 +1,62 @@
+name: Build & Release APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:   # عشان تقدر تشغله يدوي من تاب Actions
+
+permissions:
+  contents: write      # مهم جداً لإنشاء الـ Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. اسحب الكود
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. تجهيز Java
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # 3. بناء الـ APK بـ Buildozer
+      - name: Build with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
+        with:
+          command: buildozer android debug
+          buildozer_version: stable
+
+      # 4. جلب رقم الإصدار من buildozer.spec
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(grep -m1 "^version" buildozer.spec | cut -d'=' -f2 | tr -d ' ')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "BUILD_DATE=$(date +'%Y-%m-%d_%H-%M')" >> $GITHUB_OUTPUT
+
+      # 5. إنشاء Release ورفع الـ APK جواه
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.VERSION }}-${{ github.run_number }}
+          name: "Release v${{ steps.version.outputs.VERSION }} (Build ${{ github.run_number }})"
+          body: |
+            ## 🚀 إصدار جديد
+            - **الإصدار:** ${{ steps.version.outputs.VERSION }}
+            - **رقم البناء:** ${{ github.run_number }}
+            - **التاريخ:** ${{ steps.version.outputs.BUILD_DATE }}
+            - **Commit:** ${{ github.sha }}
+
+            ### 📥 التحميل
+            حمّل ملف `app-debug.apk` من قسم Assets تحت.
+          files: ${{ steps.buildozer.outputs.filename }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
