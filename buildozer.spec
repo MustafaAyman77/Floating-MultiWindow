@@ -8,16 +8,16 @@ version = 0.1
 
 requirements = python3,kivy,pyjnius,android
 
-# صلاحيات أندرويد
-android.permissions = SYSTEM_ALERT_WINDOW,FOREGROUND_SERVICE,QUERY_ALL_PACKAGES,PACKAGE_USAGE_STATS
+orientation = portrait
+fullscreen = 0
 
-# إصدار أندرويد الأدنى
-android.minapi = 24
+android.permissions = SYSTEM_ALERT_WINDOW,FOREGROUND_SERVICE,QUERY_ALL_PACKAGES
 android.api = 33
+android.minapi = 24
+android.archs = arm64-v8a,armeabi-v7a
+android.accept_sdk_license = True
+android.ndk = 25b
 
-# الخدمة
-services = Bubble:bubble.py
-
-# إعدادات أخرى
-android.archs = arm64-v8a, armeabi-v7a
-android.allow_backup = True
+[buildozer]
+log_level = 2
+warn_on_root = 1
